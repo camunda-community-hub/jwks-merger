@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jwks-merger
+  namespace: <YOUR_NAMESPACE>
+  labels:
+    app: jwks-merger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jwks-merger
+  template:
+    metadata:
+      labels:
+        app: jwks-merger
+    spec:
+      imagePullSecrets:
+        - name: <YOUR_IMAGE_PULL_SECRET>
+      containers:
+        - name: jwks-merger
+          image: <YOUR_DOCKER_IMAGE>
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: JWKS_UPSTREAM_URLS_0
+              value: "<YOUR_JWKS_UPSTREAM_URL_0>"
+            - name: JWKS_UPSTREAM_URLS_1
+              value: "<YOUR_JWKS_UPSTREAM_URL_1>"
+            - name: JWKS_REFRESH_INTERVAL_MS
+              value: "60000"
+            - name: LOGGING_LEVEL_COM_EXAMPLE_JWKSMERGER
+              value: "INFO"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jwks-merger
+  namespace: <YOUR_NAMESPACE>
+  labels:
+    app: jwks-merger
+spec:
+  selector:
+    app: jwks-merger
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jwks-merger-ingress
+  namespace: <YOUR_NAMESPACE>
+  annotations:
+    cert-manager.io/cluster-issuer: "<YOUR_CERT_MANAGER_CLUSTER_ISSUER>"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: ingress-nginx
+  tls:
+    - hosts:
+        - <YOUR_DOMAIN>
+      secretName: jwks-merger-tls-secret
+  rules:
+    - host: <YOUR_DOMAIN>
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jwks-merger
+                port:
+                  number: 80
