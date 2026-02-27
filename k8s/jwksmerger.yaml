@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jwks-merger
-  namespace: <YOUR_NAMESPACE>
   labels:
     app: jwks-merger
 spec:
@@ -19,7 +18,7 @@ spec:
         - name: <YOUR_IMAGE_PULL_SECRET>
       containers:
         - name: jwks-merger
-          image: <YOUR_DOCKER_IMAGE>
+          image: ghcr.io/camunda-community-hub/jwks-merger:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

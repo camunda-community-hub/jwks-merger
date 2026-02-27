@@ -14,7 +14,7 @@
 
     <groupId>com.example</groupId>
     <artifactId>jwks-merger</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>jwks-merger</name>
     <description>JWKS merging proxy — aggregates keys from multiple JWKS endpoints</description>
 
